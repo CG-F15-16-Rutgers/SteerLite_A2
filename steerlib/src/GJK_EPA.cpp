@@ -32,6 +32,28 @@ void getShapeCenter(Util::Vector& c, const std::vector<Util::Vector>& _shape)
     return; 
 }
 
+
+
+Util::Vector support(const std::vector<Util::Vector>& _shape, Util::Vector direction)
+{
+	float dotprod = -100000000000; 
+	float dotprod_t = 0; 
+	std::vector<Util::Vector>::const_iterator it_t = _shape.begin(); 
+
+	for (std::vector<Util::Vector>::const_iterator it = _shape.begin(); it != _shape.end(); ++it)
+	{
+		dotprod_t = it->x * direction.x + it->y * direction.y + it->z * direction.z; 
+		if(dotprod_t > dotprod)
+		{
+			dotprod = dotprod_t; 
+			it_t = it; 
+		}
+	}
+	Util::Vector returnVector(it_t->x, it_t->y, it_t->z); 
+	return returnVector; 
+
+}
+
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
 {
@@ -64,8 +86,13 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	Util::Vector direction = cA - cB; 
 	std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
 	
+	Util::Vector A_point; 
+	A_point = support(shapeA, direction); 
+	Util::Vector B_point; 
+	B_point = support(shapeB, direction); 
 
-
+	std::cout << A_point.x << " "<< A_point.y << " "<< A_point.z << std::endl; 
+	std::cout << B_point.x << " "<< B_point.y << " "<< B_point.z << std::endl; 
 
 
 
