@@ -34,7 +34,7 @@ void getShapeCenter(Util::Vector& c, const std::vector<Util::Vector>& _shape)
 
 
 
-Util::Vector support(const std::vector<Util::Vector>& _shape, Util::Vector direction)
+Util::Vector supportStep(const std::vector<Util::Vector>& _shape, Util::Vector direction)
 {
 	float dotprod = -100000000000; 
 	float dotprod_t = 0; 
@@ -53,6 +53,24 @@ Util::Vector support(const std::vector<Util::Vector>& _shape, Util::Vector direc
 	return returnVector; 
 
 }
+
+Util::Vector support(const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB, Util::Vector direction)
+{
+	Util::Vector A_point; 
+	A_point = supportStep(_shapeA, direction); 
+	
+	direction *= -1;    // reverse the direction 
+	//std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+	Util::Vector B_point; 
+	B_point = supportStep(_shapeB, direction); 
+
+	//std::cout << A_point.x << " "<< A_point.y << " "<< A_point.z << std::endl; 
+	//std::cout << B_point.x << " "<< B_point.y << " "<< B_point.z << std::endl; 
+
+	return (B_point - A_point); // AB
+}
+
+
 
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
@@ -77,6 +95,7 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	shapeB.push_back(tmp6); 
 	shapeB.push_back(tmp7); 
 /////////////////////////////////////////////////////////////
+	std::vector<Util::Vector> simplexList; 
 	// compute the shape Center
 	Util::Vector cA(0,0,0); 
 	Util::Vector cB(0,0,0); 
@@ -84,18 +103,12 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	getShapeCenter(cB, shapeB); 
 
 	Util::Vector direction = cA - cB; 
-	std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+	//std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+	Util::Vector simplex = support(shapeA, shapeB, direction); 
 	
-	Util::Vector A_point; 
-	A_point = support(shapeA, direction); 
-	Util::Vector B_point; 
-	B_point = support(shapeB, direction); 
+    simplexList.push_back(simplex); 
 
-	std::cout << A_point.x << " "<< A_point.y << " "<< A_point.z << std::endl; 
-	std::cout << B_point.x << " "<< B_point.y << " "<< B_point.z << std::endl; 
-
-
-
+   
 
     return false; // There is no collision
 }
