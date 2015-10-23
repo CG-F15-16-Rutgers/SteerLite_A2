@@ -10,6 +10,7 @@
 
 SteerLib::GJK_EPA::GJK_EPA()
 {
+
 }
 
 void getShapeCenter(Util::Vector& c, const std::vector<Util::Vector>& _shape)
@@ -100,18 +101,116 @@ bool onSegment(Util::Vector A, Util::Vector B, Util::Vector Origin)
 {
 	Util::Vector AB = B - A; 
 	Util::Vector AO = -1 * A; 
-	float rx = AO.x/AB.x;
-	float ry = AO.y/AB.y;
-	float rz = AO.z/AB.z;
-	if(rx == ry && ry == rz)
+	float rx = 0 , ry = 0, rz = 0; 
+	bool x_e = false; 
+	bool y_e = false; 
+	bool z_e = false; // exclude
+	if(AB.x == 0 || AO.x == 0 )
+	{
+		if(!(AB.x == 0 && AO.x == 0))
+		{
+			return false;  // not on the Segment
+		}
+		x_e = true; 
+	}else
+	{
+		rx = AO.x/AB.x;
+	}
+
+	if(AB.y == 0 || AO.y == 0 )
+	{
+		if(!(AB.y == 0 && AO.y == 0))
+		{
+			return false;  // not on the Segment
+		}
+		y_e = true; 
+	}else
+	{
+		ry = AO.y/AB.y;
+	}
+
+	if(AB.z == 0 || AO.z == 0 )
+	{
+		if(!(AB.z == 0 && AO.z == 0))
+		{
+			return false;  // not on the Segment
+		}
+		z_e = true; 
+	}else
+	{
+		rz = AO.z/AB.z;
+	}
+
+
+	// seperate to several situation. 
+	if(!x_e && !y_e && !z_e)
+	{
+		if(rx == ry && ry == rz)
+		{
+			//std::cout<< "rx= " << rx << std::endl; 
+			if(0 <= rx && rx <= 1)
+			{
+				return true; 
+			}
+
+		}else return false; 
+	}else if(!x_e && !y_e && z_e)
+	{
+		if(rx == ry)
+		{
+			//std::cout<< "rx= " << rx << std::endl; 
+			if(0 <= rx && rx <= 1)
+			{
+				return true; 
+			}
+
+		}else return false; 
+	}else if(!x_e && y_e && !z_e)
+	{
+		if(rx == rz)
+		{
+			//std::cout<< "rx= " << rx << std::endl; 
+			if(0 <= rx && rx <= 1)
+			{
+				return true; 
+			}
+
+		}else return false; 
+	}else if(x_e && !y_e && !z_e)
+	{
+		if(ry == ry)
+		{
+			//std::cout<< "rx= " << rx << std::endl; 
+			if(0 <= ry && ry <= 1)
+			{
+				return true; 
+			}
+
+		}else return false; 
+	}
+	else if(!x_e && y_e && z_e)
 	{
 		if(0 <= rx && rx <= 1)
 		{
 			return true; 
-		}
-
+		}else return false; 
 	}
-	return false; 
+	else if(x_e && !y_e && z_e)
+	{
+		if(0 <= ry && ry <= 1)
+		{
+			return true; 
+		}else return false; 
+	}
+	else if(x_e && y_e && !z_e)
+	{
+		if(0 <= rz && rz <= 1)
+		{
+			return true; 
+		}else return false; 
+	}
+	else{return true;}
+	
 }
 
 
@@ -154,13 +253,19 @@ bool containsOrigin(std::vector<Util::Vector>& simplexList,  Util::Vector Origin
    	return true; 
 
 }
-
+void printShape(const std::vector<Util::Vector>&  _shape)
+{
+	std::cout<< "\n printing shape\n"; 
+	for (std::vector<Util::Vector>::const_iterator it = _shape.begin(); it != _shape.end(); ++it)
+	{
+		std::cout << it->x << " " << it->y << " "<< it->z << std::endl; 
+	}
+}
 
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
 {
-	std::vector<Util::Vector> shapeA;
-	Util::Vector Origin(0,0,0);
+	/*std::vector<Util::Vector> shapeA;
 
 	Util::Vector tmp1(4,0,11); 
 	Util::Vector tmp2(4,0,5); 
@@ -179,14 +284,18 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	shapeB.push_back(tmp4); 
 	shapeB.push_back(tmp5); 
 	shapeB.push_back(tmp6); 
-	shapeB.push_back(tmp7); 
+	shapeB.push_back(tmp7); */
 /////////////////////////////////////////////////////////////
+	//printShape(_shapeA); 
+	//printShape(_shapeB); 
+
+	Util::Vector Origin(0,0,0);
 	std::vector<Util::Vector> simplexList; 
 	// compute the shape Center
 	Util::Vector cA(0,0,0); 
 	Util::Vector cB(0,0,0); 
-	getShapeCenter(cA, shapeA); 
-	getShapeCenter(cB, shapeB); 
+	getShapeCenter(cA, _shapeA); 
+	getShapeCenter(cB, _shapeB); 
 
 	Util::Vector direction = cA - cB; 
 	if(direction  == Origin)
@@ -194,12 +303,12 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 		return true; 
 	}
 	//std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
-	Util::Vector simplex = support(shapeA, shapeB, direction); 
+	Util::Vector simplex = support(_shapeA, _shapeB, direction); 
 	simplexList.push_back(simplex); 
 	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
 
 	direction *= -1; // reverse direction
-	simplex = support(shapeA, shapeB, direction); 
+	simplex = support(_shapeA, _shapeB, direction); 
 	simplexList.push_back(simplex);        // get the first two simplex. build a line
 	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
 
@@ -212,6 +321,7 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 
     	if(direction == Origin) // if direction = 0,0,0 // origin is on the line AB
     	{
+			//std::cout << " direction == Origin" << std::endl;
     		if(simplexList.size() != 2){
     			std::cout << "Error: Direction Origin " << std::endl; 
     			break; 
@@ -227,7 +337,7 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
     			return false; 
     	}
 
-    	simplex = support(shapeA, shapeB, direction);   
+    	simplex = support(_shapeA, _shapeB, direction);   
  
     	std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
 
