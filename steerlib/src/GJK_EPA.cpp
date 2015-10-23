@@ -89,10 +89,79 @@ Util::Vector getDirection(const std::vector<Util::Vector>& simplexList)
     return direction; 
 }
 
+/*bool cross(Util::Vector p1, Util::Vector p2, Util::Vector p3)
+{	
+	if((p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y) > 0.0f)
+		return true; 
+	else
+		return false; 
+}*/
+bool onSegment(Util::Vector A, Util::Vector B, Util::Vector Origin)
+{
+	Util::Vector AB = B - A; 
+	Util::Vector AO = -1 * A; 
+	float rx = AO.x/AB.x;
+	float ry = AO.y/AB.y;
+	float rz = AO.z/AB.z;
+	if(rx == ry && ry == rz)
+	{
+		if(0 <= rx && rx <= 1)
+		{
+			return true; 
+		}
+
+	}
+	return false; 
+}
+
+
+bool containsOrigin(std::vector<Util::Vector>& simplexList,  Util::Vector Origin)
+{
+	if(simplexList.size()!=3)
+	{
+		std::cout << "Error: check containsOrigin" << std::endl; 
+		return false; 
+	}
+
+	std::vector<Util::Vector>::iterator it1 = simplexList.begin();
+	Util::Vector C(it1->x, it1->y, it1->z); 
+	it1++; 
+	Util::Vector B(it1->x, it1->y, it1->z); // the second last added simplex
+	it1++; 
+	Util::Vector A(it1->x, it1->y, it1->z); // the last added simplex
+
+    Util::Vector AB = B - A; 
+    Util::Vector AC = C - A; 
+    Util::Vector AO = A * (-1);
+	Util::Vector prep_AB = AC*(AB*AB) - AB*(AB*AC); // (AB X AC) X AB;  
+	Util::Vector prep_AC = AB*(AC*AC) - AC*(AC*AB); // (AC X AB) X AC;  
+    
+    if(onSegment(A,  B, Origin) || onSegment(A,  C, Origin))
+    {
+    	return true; 
+    }
+
+    if(prep_AB * AO <= 0)
+    {// in the R4 area, remove C
+    	simplexList.erase(simplexList.begin());  
+    	return false; 
+    }
+    else if(prep_AC * AO <= 0)
+    {// in the R3 area, remove b
+    	simplexList.erase(simplexList.begin() + 1); 
+    	return false;  
+    }
+   	return true; 
+
+}
+
+
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
 {
 	std::vector<Util::Vector> shapeA;
+	Util::Vector Origin(0,0,0);
+
 	Util::Vector tmp1(4,0,11); 
 	Util::Vector tmp2(4,0,5); 
 	Util::Vector tmp3(9,0,9); 
@@ -120,6 +189,10 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	getShapeCenter(cB, shapeB); 
 
 	Util::Vector direction = cA - cB; 
+	if(direction  == Origin)
+	{
+		return true; 
+	}
 	//std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
 	Util::Vector simplex = support(shapeA, shapeB, direction); 
 	simplexList.push_back(simplex); 
@@ -130,11 +203,30 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	simplexList.push_back(simplex);        // get the first two simplex. build a line
 	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
 
-    int index = 2; 
+    int index = 0; 
     std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
-    while(--index) // temp 4 times
+    while(true) // temp 4 times
     {
+    	index++; 
     	direction = getDirection(simplexList); 
+
+    	if(direction == Origin) // if direction = 0,0,0 // origin is on the line AB
+    	{
+    		if(simplexList.size() != 2){
+    			std::cout << "Error: Direction Origin " << std::endl; 
+    			break; 
+    		}
+
+    		std::vector<Util::Vector>::iterator it = simplexList.begin(); 
+    		Util::Vector p1(it->x, it->y, it->z);
+    		it++;  
+    		Util::Vector p2(it->x, it->y, it->z);
+    		if(onSegment(p1, p2, Origin))
+    			return true; 
+    		else
+    			return false; 
+    	}
+
     	simplex = support(shapeA, shapeB, direction);   
  
     	std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
@@ -142,17 +234,18 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
     	simplexList.push_back(simplex); 
     	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
 
-    	if(simplex * direction <=0){
+    	if(simplex * direction <= 0){
+    		//the new simplex is not past the origin in the direction
+    		//impossibly contain the origin 
     		return false; 
-    	} //else {
-    		//direction = getDirection(simplexList); 
-    		//std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
-    	//}
-
+    	} else {
+    		if(containsOrigin(simplexList, Origin))
+    		{
+    			return true; 
+    		}
+    	}
 
     }
-
-   
 
     return false; // There is no collision
 }
