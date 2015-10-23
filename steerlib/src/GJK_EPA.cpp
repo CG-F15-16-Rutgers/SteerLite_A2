@@ -67,10 +67,27 @@ Util::Vector support(const std::vector<Util::Vector>& _shapeA, const std::vector
 	//std::cout << A_point.x << " "<< A_point.y << " "<< A_point.z << std::endl; 
 	//std::cout << B_point.x << " "<< B_point.y << " "<< B_point.z << std::endl; 
 
-	return (B_point - A_point); // AB
+	return (A_point - B_point); // shape A - shape B 
 }
 
+Util::Vector getDirection(const std::vector<Util::Vector>& simplexList)
+{
+	if(simplexList.size() < 2)
+	{
+		std::cout << "Error: getting direction"<< std::endl; 
+		return Util::Vector(0, 0, 0); 
+	}
+	std::vector<Util::Vector>::const_reverse_iterator rit = simplexList.rbegin();
+	Util::Vector lastSimplex(rit->x, rit->y, rit->z); 
+	rit++; 
+	Util::Vector secondLastSimplex(rit->x, rit->y, rit->z); 
 
+	Util::Vector AB = lastSimplex - secondLastSimplex; 
+    Util::Vector AO = lastSimplex * (-1);
+    Util::Vector direction = AO*(AB*AB) - AB*(AB*AO); // (AB X AO) X AB;  
+
+    return direction; 
+}
 
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
@@ -105,8 +122,35 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	Util::Vector direction = cA - cB; 
 	//std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
 	Util::Vector simplex = support(shapeA, shapeB, direction); 
-	
-    simplexList.push_back(simplex); 
+	simplexList.push_back(simplex); 
+	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
+
+	direction *= -1; // reverse direction
+	simplex = support(shapeA, shapeB, direction); 
+	simplexList.push_back(simplex);        // get the first two simplex. build a line
+	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
+
+    int index = 2; 
+    std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+    while(--index) // temp 4 times
+    {
+    	direction = getDirection(simplexList); 
+    	simplex = support(shapeA, shapeB, direction);   
+ 
+    	std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+
+    	simplexList.push_back(simplex); 
+    	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
+
+    	if(simplex * direction <=0){
+    		return false; 
+    	} //else {
+    		//direction = getDirection(simplexList); 
+    		//std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+    	//}
+
+
+    }
 
    
 
