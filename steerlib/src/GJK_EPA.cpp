@@ -140,77 +140,42 @@ bool onSegment(Util::Vector A, Util::Vector B, Util::Vector Origin)
 	{
 		rz = AO.z/AB.z;
 	}
+	std::vector<float> r; 
+	if(!x_e) r.push_back(rx);
+	if(!y_e) r.push_back(ry);
+	if(!z_e) r.push_back(rz);   
 
-
-	// seperate to several situation. 
-	if(!x_e && !y_e && !z_e)
+	if(r.size() == 3)
 	{
-		if(rx == ry && ry == rz)
+		if(r[0] == r[1] && r[1] == r[2])
 		{
-			//std::cout<< "rx= " << rx << std::endl; 
-			if(0 <= rx && rx <= 1)
-			{
-				return true; 
-			}
-
-		}else return false; 
-	}else if(!x_e && !y_e && z_e)
-	{
-		if(rx == ry)
-		{
-			//std::cout<< "rx= " << rx << std::endl; 
-			if(0 <= rx && rx <= 1)
-			{
-				return true; 
-			}
-
-		}else return false; 
-	}else if(!x_e && y_e && !z_e)
-	{
-		if(rx == rz)
-		{
-			//std::cout<< "rx= " << rx << std::endl; 
-			if(0 <= rx && rx <= 1)
-			{
-				return true; 
-			}
-
-		}else return false; 
-	}else if(x_e && !y_e && !z_e)
-	{
-		if(ry == ry)
-		{
-			//std::cout<< "rx= " << rx << std::endl; 
-			if(0 <= ry && ry <= 1)
+			if(0 <= r[0] && r[0] <= 1)
 			{
 				return true; 
 			}
 
 		}else return false; 
 	}
-	else if(!x_e && y_e && z_e)
+	else if(r.size() == 2)
 	{
-		if(0 <= rx && rx <= 1)
+		if(r[0] == r[1])
+		{
+			if(0 <= r[0] && r[0] <= 1)
+			{
+				return true; 
+			}
+
+		}else return false; 
+
+	}
+	else if(r.size() == 1)
+	{
+		if(0 <= r[0] && r[0] <= 1)
 		{
 			return true; 
 		}else return false; 
 	}
-	else if(x_e && !y_e && z_e)
-	{
-		if(0 <= ry && ry <= 1)
-		{
-			return true; 
-		}else return false; 
-	}
-	else if(x_e && y_e && !z_e)
-	{
-		if(0 <= rz && rz <= 1)
-		{
-			return true; 
-		}else return false; 
-	}
-	else{return true;}
-	
+	else return true; 
 }
 
 
@@ -222,12 +187,9 @@ bool containsOrigin(std::vector<Util::Vector>& simplexList,  Util::Vector Origin
 		return false; 
 	}
 
-	std::vector<Util::Vector>::iterator it1 = simplexList.begin();
-	Util::Vector C(it1->x, it1->y, it1->z); 
-	it1++; 
-	Util::Vector B(it1->x, it1->y, it1->z); // the second last added simplex
-	it1++; 
-	Util::Vector A(it1->x, it1->y, it1->z); // the last added simplex
+	Util::Vector C = simplexList[0]; 
+	Util::Vector B = simplexList[1]; // the second last added simplex
+	Util::Vector A = simplexList[2]; // the last added simplex
 
     Util::Vector AB = B - A; 
     Util::Vector AC = C - A; 
