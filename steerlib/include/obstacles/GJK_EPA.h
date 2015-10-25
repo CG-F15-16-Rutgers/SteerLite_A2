@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cfloat>
 #include <string>
+#include <algorithm>
 
 #define TOLERANCE 0.0002
 
