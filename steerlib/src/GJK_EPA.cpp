@@ -224,6 +224,74 @@ void printShape(const std::vector<Util::Vector>&  _shape)
 	}
 }
 
+void printVector(std::string s, Util::Vector v) {
+	std::cout << "Vector " << s << " is " << v.x << " " << v.y << " " << v.z << std::endl;
+}
+bool getShortestEdge(const std::vector<Util::Vector>& simplexList, SteerLib::Edge& shortestEdge)
+{
+	float shortestDistance = FLT_MAX;
+
+	for (int i = 0; i < simplexList.size(); ++i)
+	{
+		int next = i + 1;
+		if (next == simplexList.size()) {
+			next = 0;
+		}
+
+		Util::Vector AB = simplexList[next] - simplexList[i];
+		Util::Vector AO = -1 * simplexList[i];
+		Util::Vector perp;
+		//check if A, B, O are on same line
+		if (fabs(fabs(AB*AO) - AB.norm() * AO.norm()) < TOLERANCE) {
+			perp.x = -1 * AB.z;
+			perp.y = 0;
+			perp.z = AB.x;
+		} else {
+			perp = AO*(AB*AB) - AB*(AB*AO);
+		}
+		
+		//printVector("perp", perp);
+		//printVector("AB", AB);
+		perp = Util::normalize(perp);
+		float distance = fabs(AO*perp);
+		if (shortestDistance > distance) {
+			shortestEdge.p1 = simplexList[i];
+			shortestEdge.p2 = simplexList[next];
+			shortestEdge.perp = -1 * perp;
+			shortestEdge.index = next;
+			shortestEdge.distance = distance;
+			shortestDistance = distance;
+		}
+	}
+
+	if (shortestDistance == FLT_MAX) {
+		return false;
+	} else {
+		return true;
+	}
+
+}
+
+bool EPA(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB, std::vector<Util::Vector> simplexList)
+{
+	while (1) {
+		SteerLib::Edge shortestEdge;
+		if (!getShortestEdge(simplexList, shortestEdge)) std::cerr << "No shortestEdge found!!!" << std::endl;
+
+		Util::Vector simplex = support(_shapeA, _shapeB, shortestEdge.perp);
+		float difference = fabs(simplex * shortestEdge.perp - shortestEdge.distance);
+		if (difference < TOLERANCE) {
+			return_penetration_depth = shortestEdge.distance;
+			return_penetration_vector = shortestEdge.perp;
+			return true;
+		} else {
+			simplexList.insert(simplexList.begin() + shortestEdge.index, simplex);
+		}
+	}
+	return false;
+}
+
+
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
 {
@@ -294,7 +362,10 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
     		it++;  
     		Util::Vector p2(it->x, it->y, it->z);
     		if(onSegment(p1, p2, Origin))
+    		{
+    			EPA(return_penetration_depth, return_penetration_vector,_shapeA , _shapeB, simplexList); 
     			return true; 
+    		}
     		else
     			return false; 
     	}
@@ -313,11 +384,17 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
     	} else {
     		if(containsOrigin(simplexList, Origin))
     		{
+    			EPA(return_penetration_depth, return_penetration_vector,_shapeA , _shapeB, simplexList); 
     			return true; 
     		}
     	}
 
     }
 
+
+
+
     return false; // There is no collision
 }
+
+

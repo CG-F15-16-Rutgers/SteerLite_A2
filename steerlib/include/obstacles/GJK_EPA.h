@@ -13,10 +13,24 @@
 
 
 #include <vector>
+#include <cmath>
+#include <cfloat>
+#include <string>
+
+#define TOLERANCE 0.0002
 
 
 namespace SteerLib
 {
+      class Edge {
+      public:
+            Util::Vector p1;
+            Util::Vector p2;
+            Util::Vector perp;
+            float distance;
+            int index;
+            Edge():index(-1){}; //p1(Util::Vector(0,0,0)), p2(Util::Vector(0,0,0)), perp(Util::Vector(0,0,0)),distance(0.0f), index(-1){}; 
+      }; 
 
     class STEERLIB_API GJK_EPA
     {
