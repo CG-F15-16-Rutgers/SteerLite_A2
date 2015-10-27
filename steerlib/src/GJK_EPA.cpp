@@ -468,29 +468,7 @@ std::vector< std::vector<Util::Vector> > decompositeShape(const std::vector<Util
 //Look at the GJK_EPA.h header file for documentation and instructions
 bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB)
 {
-	/*std::vector<Util::Vector> shapeA;
-
-	  Util::Vector tmp1(4,0,11); 
-	  Util::Vector tmp2(4,0,5); 
-	  Util::Vector tmp3(9,0,9); 
-
-	  shapeA.push_back(tmp1); 
-	  shapeA.push_back(tmp2); 
-	  shapeA.push_back(tmp3); 
-
-	  std::vector<Util::Vector> shapeB;
-	  Util::Vector tmp4(5,0,7); 
-	  Util::Vector tmp5(12,0,7); 
-	  Util::Vector tmp6(7,0,3); 
-	  Util::Vector tmp7(10,0,2); 
-
-	  shapeB.push_back(tmp4); 
-	  shapeB.push_back(tmp5); 
-	  shapeB.push_back(tmp6); 
-	  shapeB.push_back(tmp7); */
-	/////////////////////////////////////////////////////////////
-	//printShape(_shapeA); 
-	//printShape(_shapeB); 
+/********** for extra credit *************/
 
 	if(!detectConvex(_shapeA) || !detectConvex(_shapeB)) {
 		std::cerr << "shape A or B is not a convex!!" << std::endl; 
@@ -498,9 +476,9 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 		std::vector<std::vector<Util::Vector>> decomp_B = decompositeShape(_shapeB);
 		
 		for (int i = 0; i < decomp_A.size(); ++i) {
-			printShape(decomp_A[i]);
+//			printShape(decomp_A[i]);
 			for (int j = 0; j < decomp_B.size(); ++j) {
-				printShape(decomp_B[i]);
+//				printShape(decomp_B[i]);
 				if (intersect(return_penetration_depth, return_penetration_vector, decomp_A[i], decomp_B[j])) {
 					return true;
 				}
@@ -508,15 +486,9 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 		} 
 		return false;
 	}
-/*
-	if(!detectConvex(_shapeB)) {
-		std::cerr << "shape B is not a convex!!" << std::endl; 
-		for (int i = 0; i < decomp_B.size(); ++i) {
-			printShape(decomp_B[i]);
-		} 
-		return false;
-	}
-*/
+
+/*********** until this line ***************/
+
 	Util::Vector Origin(0,0,0);
 	std::vector<Util::Vector> simplexList; 
 	// compute the shape Center
@@ -533,15 +505,15 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 	//std::cout << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
 	Util::Vector simplex = support(_shapeA, _shapeB, direction); 
 	simplexList.push_back(simplex); 
-	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
+//	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
 
 	direction *= -1; // reverse direction
 	simplex = support(_shapeA, _shapeB, direction); 
 	simplexList.push_back(simplex);        // get the first two simplex. build a line
-	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
+//	std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
 
 	int index = 0; 
-	std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+//	std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
 	while(true) // temp 4 times
 	{
 		index++; 
@@ -570,10 +542,10 @@ bool SteerLib::GJK_EPA::intersect(float& return_penetration_depth, Util::Vector&
 
 		simplex = support(_shapeA, _shapeB, direction);   
 
-		std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
+//		std::cout <<"Index= " << index <<" " << direction.x << " "<< direction.y << " "<< direction.z << std::endl; 
 
 		simplexList.push_back(simplex); 
-		std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
+//		std::cout <<"Simplex: "  << simplex.x << " "<< simplex.y << " "<< simplex.z << std::endl; 
 
 		if(simplex * direction <= 0){
 			//the new simplex is not past the origin in the direction
